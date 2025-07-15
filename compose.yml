@@ -1,0 +1,71 @@
+networks:
+  devnet:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
+
+services:
+  mysql-portfolio:
+    image: mysql:latest
+    platform: linux/amd64
+    container_name: mysql-portfolio
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: securepassword
+      MYSQL_DATABASE: portfolio
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql-custom.cnf:/etc/mysql/conf.d/mysql-custom.cnf
+    networks:
+      - devnet
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+      interval: 1m30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+      start_interval: 5s
+
+volumes:
+  mysql_data:
+
+#  db-migration:
+#    build:
+#      context: ../db-migration
+#    container_name: db-migration
+#    depends_on:
+#      - mysql-portfolio
+#    environment:
+#      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-portfolio:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+#      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+#      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+#    networks:
+#      - devnet
+#
+#  portfolio-api:
+#    build:
+#      context: ../portfolio-api
+#    container_name: portfolio-api
+#    ports:
+#      - "8080:8080"
+#    environment:
+#      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-portfolio:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+#      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+#      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+#    depends_on:
+#      - mysql-portfolio
+#    networks:
+#      - devnet
+#
+#  portfolio-frontend:
+#    build:
+#      context: ../portfolio-frontend
+#    container_name: portfolio-frontend
+#    ports:
+#      - "4200:80"
+#    depends_on:
+#      - portfolio-api
+#    networks:
+#      - devnet
