@@ -1,17 +1,22 @@
+version: '3.8'
+
 networks:
   devnet:
     driver: bridge
-    driver_opts:
-      com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
+
+volumes:
+  mysql_data:
 
 services:
-  mysql-portfolio:
-    image: mysql:latest
+  portfolio-db:
+    image: mysql:8.3
     platform: linux/amd64
-    container_name: mysql-portfolio
+    container_name: portfolio-db
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: securepassword
+      MYSQL_ROOT_PASSWORD: IamRoot
+      MYSQL_USER: portfolio_user
+      MYSQL_PASSWORD: bananas!
       MYSQL_DATABASE: portfolio
     ports:
       - "3306:3306"
@@ -22,50 +27,21 @@ services:
       - devnet
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
-      interval: 1m30s
+      interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 40s
-      start_interval: 5s
+      retries: 10
+      start_period: 20s
 
-volumes:
-  mysql_data:
-
-#  db-migration:
-#    build:
-#      context: ../db-migration
-#    container_name: db-migration
-#    depends_on:
-#      - mysql-portfolio
-#    environment:
-#      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-portfolio:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-#      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
-#      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
-#    networks:
-#      - devnet
-#
-#  portfolio-api:
-#    build:
-#      context: ../portfolio-api
-#    container_name: portfolio-api
-#    ports:
-#      - "8080:8080"
-#    environment:
-#      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-portfolio:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-#      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
-#      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
-#    depends_on:
-#      - mysql-portfolio
-#    networks:
-#      - devnet
-#
-#  portfolio-frontend:
-#    build:
-#      context: ../portfolio-frontend
-#    container_name: portfolio-frontend
-#    ports:
-#      - "4200:80"
-#    depends_on:
-#      - portfolio-api
-#    networks:
-#      - devnet
+  db-migration:
+    build:
+      context: ../db-migration
+    container_name: db-migration
+    depends_on:
+      portfolio-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://portfolio-db:3306/portfolio?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: portfolio_user
+      SPRING_DATASOURCE_PASSWORD: bananas!
+    networks:
+      - devnet

@@ -41,10 +41,10 @@ git clone https://github.com/your-org/portfolio-frontend.git
 Create a `.env` file in `infra-dev/` with:
 
 ```env
-MYSQL_ROOT_PASSWORD=securepassword
+MYSQL_ROOT_PASSWORD=IamRoot
 MYSQL_DATABASE=portfolio
 MYSQL_USER=portfolio_user
-MYSQL_PASSWORD=securepassword
+MYSQL_PASSWORD=bananas!
 ```
 
 ### 3. Start Local Dev Environment
